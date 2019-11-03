@@ -111,42 +111,44 @@ public class Model {
 		Set<Integer> refs = new HashSet<Integer>();
 		try {
 			File directory = new File(path);
+			if (!directory.canRead() || !directory.canWrite()) {
+				throw new IOException(path + " is not accessible.");
+			}
 			if (directory.exists()) {
 				if (!directory.isDirectory()) {
 					throw new IOException(path + " is not a directory.");
-				} else if (!directory.canRead() || !directory.canWrite()) {
-					throw new IOException(path + " is not accessible.");
+				}
+				for (File s : directory.listFiles()) {
+					if (!s.isFile()) {
+						continue;
+					}
+					if (!s.canRead()) {
+						logger.error("File " + s.getName() + "could not be read");
+						continue;
+					}
+					String ref;
+					if ((ref = getRefID(s)) != null) {
+						refs.add(Integer.valueOf(ref));
+					} else {
+						for (Item i : items) {
+							String fileWithoutExtension = FilenameUtils.removeExtension(s.getName());
+							if (i.getName().equalsIgnoreCase(fileWithoutExtension)) {
+								logger.info("Detected file " + s.getName());
+								addRefID(s, "" + i.getID());
+								refs.add(Integer.valueOf(i.getID()));
+							}
+						}
+					}
 				}
 			} else {
 				directory.mkdir();
 				logger.info("Created folder " + directory.getAbsolutePath());
-				return refs;
-			}
-			for (File s : directory.listFiles()) {
-				if (!s.isFile()) {
-					continue;
-				}
-				if (!s.canRead()) {
-					logger.error("File " + s.getName() + "could not be read");
-					continue;
-				}
-				String ref;
-				if ((ref = getRefID(s)) != null) {
-					refs.add(Integer.valueOf(ref));
-				} else {
-					for (Item i : items) {
-						String fileWithoutExtension = FilenameUtils.removeExtension(s.getName());
-						if (i.getName().equalsIgnoreCase(fileWithoutExtension)) {
-							logger.info("Detected file " + s.getName());
-							addRefID(s, "" + i.getID());
-							refs.add(Integer.valueOf(i.getID()));
-						}
-					}
-				}
+				return null;
 			}
 		} catch (IOException e) {
 			logger.error("Could not check existing files in directory " + path + "\n" + e.getMessage());
 			logger.debug(e);
+			return null;
 		}
 		return refs;
 	}

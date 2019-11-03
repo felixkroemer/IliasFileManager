@@ -45,7 +45,7 @@ public class FileItem extends Item {
 			return targetFile;
 
 		} catch (IOException e) {
-			logger.error("File " + this.getName() + " with id " + this.getID() + "could not be downloaded.\n"
+			logger.error("File " + this.getName() + " with id " + this.getID() + " could not be downloaded.\n"
 					+ e.getMessage());
 			logger.debug(e);
 			return null;

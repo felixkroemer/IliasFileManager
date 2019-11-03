@@ -51,13 +51,13 @@ public class Folder extends Item {
 	}
 
 	public Folder findSubfolder(String s) {
-		for (Item i : this.getChildren()) {
-			if (i.getName().equalsIgnoreCase(s)) {
-				return (Folder) i;
+		for (Folder f : this.getSubfolders()) {
+			if (f.getName().equalsIgnoreCase(s)) {
+				return f;
 			}
 		}
-		for (Folder i : this.getSubfolders()) {
-			Folder res = ((Folder) i).findSubfolder(s);
+		for (Folder f : this.getSubfolders()) {
+			Folder res = f.findSubfolder(s);
 			if (res != null) {
 				return res;
 			}
@@ -142,8 +142,8 @@ public class Folder extends Item {
 	}
 
 	public String replaceUmlaute(String s) {
-		return s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("Ä", "Ae").replace("Ö", "Oe")
-				.replace("Ü", "Ue").replace("ß", "ss");
+		return s.replace("\u00E4", "ae").replace("\u00F6", "oe").replace("\u00FC", "ue").replace("\u00C4", "Ae")
+				.replace("\u00D6", "Oe").replace("\u00DC", "Ue").replace("\u00DF", "ss");
 	}
 
 	@Override
