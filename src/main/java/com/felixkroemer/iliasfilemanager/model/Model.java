@@ -2,9 +2,6 @@ package com.felixkroemer.iliasfilemanager.model;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -102,7 +99,7 @@ public class Model {
 			Map<FileItem, File> downloadedItems = folder.downloadMissingItems(existingFileRefs, path);
 			for (Entry<FileItem, File> d : downloadedItems.entrySet()) {
 				FileItem downloadedFile = d.getKey();
-				this.addRefID(d.getValue(), "" + downloadedFile.getID());
+				FileItem.addRefID(d.getValue(), "" + downloadedFile.getID());
 			}
 		}
 	}
@@ -127,14 +124,14 @@ public class Model {
 						continue;
 					}
 					String ref;
-					if ((ref = getRefID(s)) != null) {
+					if ((ref = FileItem.getRefID(s)) != null) {
 						refs.add(Integer.valueOf(ref));
 					} else {
 						for (Item i : items) {
 							String fileWithoutExtension = FilenameUtils.removeExtension(s.getName());
 							if (i.getName().equalsIgnoreCase(fileWithoutExtension)) {
 								logger.info("Detected file " + s.getName());
-								addRefID(s, "" + i.getID());
+								FileItem.addRefID(s, "" + i.getID());
 								refs.add(Integer.valueOf(i.getID()));
 							}
 						}
@@ -151,27 +148,5 @@ public class Model {
 			return null;
 		}
 		return refs;
-	}
-
-	public void addRefID(File f, String id) {
-		try {
-			Path p = Paths.get(f.getAbsolutePath());
-			Files.setAttribute(p, "user:refid", id.getBytes());
-			logger.info("Attached ID " + id + " to File " + f.getName());
-		} catch (IOException e) {
-			logger.error("Could not attach refid " + id + " to File " + f.getName());
-			logger.debug(e);
-		}
-	}
-
-	public String getRefID(File f) {
-		try {
-			Path p = Paths.get(f.getAbsolutePath());
-			byte[] b = (byte[]) Files.getAttribute(p, "user:refid");
-			return new String(b);
-		} catch (IOException e) {
-			logger.debug(e);
-		}
-		return null;
 	}
 }
