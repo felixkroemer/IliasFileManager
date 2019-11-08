@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,7 @@ public class FileItem extends Item {
 		super(ITEM_TYPE.FILE, name, url, phpsessid);
 	}
 
-	public File downloadFile(String path) {
+	public File downloadFile(String folder) {
 		try {
 			Response resp = Jsoup.connect(this.getURL()).cookie("PHPSESSID", this.getSessionID())
 					.cookie("ilClientId", "ILIAS").header("DNT", "1").header("Upgrade-Insecure-Requests", "1")
@@ -37,10 +38,20 @@ public class FileItem extends Item {
 			if (matcher.find()) {
 				fileExtension = matcher.group(0);
 			}
-
-			File targetFile = new File(path + fileExtension);
+			Path p = Paths.get(folder, this.getName() + fileExtension);
+			File targetFile = new File(p.toString());
 			if (targetFile.exists()) {
-				throw new IOException("File already exists.");
+				HashSet<String> existingFileNames = new HashSet<String>();
+				for(File f : new File(folder).listFiles()) {
+					existingFileNames.add(f.getName());
+				}
+				int version = 2;
+				while(existingFileNames.contains(this.getName() + "_V" + version + fileExtension)) {
+					version++;
+				}
+				p = Paths.get(folder, this.getName() + "_V" + version + fileExtension);
+				targetFile = new File(p.toString());
+				logger.info("Found updated version of file " + this.getName());
 			}
 
 			try (FileOutputStream fos = new FileOutputStream(targetFile)) {

@@ -2,7 +2,6 @@ package com.felixkroemer.iliasfilemanager.model.items;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -69,9 +68,8 @@ public class Folder extends Item {
 		HashMap<FileItem, File> downloadedFiles = new HashMap<FileItem, File>();
 		for (FileItem item : this.getFiles()) {
 			if (!existingFiles.contains(item.getID())) {
-				String path = Paths.get(folder, item.getName()).normalize().toString();
 				File targetFile;
-				if ((targetFile = item.downloadFile(path)) != null) {
+				if ((targetFile = item.downloadFile(folder)) != null) {
 					downloadedFiles.put(item, targetFile);
 				}
 			}
