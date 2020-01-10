@@ -11,18 +11,19 @@ import org.jsoup.Jsoup;
 
 import com.felixkroemer.iliasfilemanager.Constant;
 import com.felixkroemer.iliasfilemanager.model.items.Folder;
+import com.felixkroemer.iliasfilemanager.Settings;
 
 public class Session {
 
 	private static final Logger logger = LogManager.getLogger(Session.class);
-	String user;
-	String password;
-	String phpsessid;
-	Folder root;
+	private String user;
+	private String password;
+	private String phpsessid;
+	private Folder root;
 
-	public Session(String user, String password) {
-		this.user = user;
-		this.password = password;
+	public Session() {
+		this.user = Settings.getConfig(Settings.Config.USERNAME);
+		this.password = Settings.getConfig(Settings.Config.PASSWORD);
 		try {
 			this.initSessionId(user, password);
 			this.root = new Folder("Root", Constant.MAINPAGE, this.phpsessid);

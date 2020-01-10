@@ -25,24 +25,22 @@ public class Model {
 
 	private static final Logger logger = LogManager.getLogger(Model.class);
 	private Session session;
-	private Settings settings;
 	private Map<Folder, String> subscriptions;
 
-	public Model(Settings s) {
-		this.settings = s;
-		this.session = new Session(settings.getUser(), settings.getPassword());
+	public Model() {
+		this.session = new Session();
 		this.subscriptions = this.initSubscriptions();
 	}
 
 	private Document parseConfig() {
-		File f = new File(this.settings.getConfig());
+		File f = new File(Settings.getConfig(Settings.Config.CONFIG_FILE));
 		if (!f.exists()) {
 			logger.fatal("Config file " + f.getAbsolutePath() + " does not exist");
 			System.exit(0);
 		}
 		Document doc = null;
 		try {
-			doc = new SAXBuilder().build(this.settings.getConfig());
+			doc = new SAXBuilder().build(Settings.getConfig(Settings.Config.CONFIG_FILE));
 		} catch (JDOMException | IOException e) {
 			logger.fatal("Config could not be parsed");
 			logger.debug(e);
@@ -87,7 +85,7 @@ public class Model {
 	public void handleSubscription(Folder folder, String path) {
 		this.handleFolder(folder, path);
 		for (Folder subfolder : folder.getSubfolders()) {
-			this.handleSubscription(subfolder, path + this.settings.getSeparator() + subfolder.getName());
+			this.handleSubscription(subfolder, path + Settings.getSeparator() + subfolder.getName());
 		}
 	}
 
