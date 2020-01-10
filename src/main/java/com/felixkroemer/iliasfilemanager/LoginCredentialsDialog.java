@@ -10,7 +10,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 public class LoginCredentialsDialog {
-	public static void requestCredentials(String username) {
+	public static void requestCredentials() {
 		JPanel panel = new JPanel(new BorderLayout(5, 5));
 		JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
 		label.add(new JLabel("Username"));
@@ -24,6 +24,7 @@ public class LoginCredentialsDialog {
 		controls.add(passwordField);
 		panel.add(controls, BorderLayout.CENTER);
 		
+		String username = Settings.getConfig(Settings.Config.USERNAME);
 		if(username!=null) {
 			usernameField.setText(username);
 		}
