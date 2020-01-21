@@ -64,12 +64,12 @@ public class Folder extends Item {
 		return null;
 	}
 
-	public Map<FileItem, File> downloadMissingItems(Set<Integer> existingFiles, String folder) {
+	public Map<FileItem, File> downloadMissingItems(String path) {
 		HashMap<FileItem, File> downloadedFiles = new HashMap<FileItem, File>();
 		for (FileItem item : this.getFiles()) {
-			if (!existingFiles.contains(item.getID())) {
+			if (!item.getSynced().get()) {
 				File targetFile;
-				if ((targetFile = item.downloadFile(folder)) != null) {
+				if ((targetFile = item.downloadFile(path)) != null) {
 					downloadedFiles.put(item, targetFile);
 				}
 			}
@@ -150,5 +150,14 @@ public class Folder extends Item {
 		for (Item i : this.children) {
 			i.setSessionID(phpsessid);
 		}
+	}
+
+	public FileItem getChildByID(int id) {
+		for (FileItem file : this.getFiles()) {
+			if (file.getID() == id) {
+				return file;
+			}
+		}
+		return null;
 	}
 }

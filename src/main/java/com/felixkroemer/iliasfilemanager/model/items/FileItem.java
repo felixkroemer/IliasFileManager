@@ -42,11 +42,11 @@ public class FileItem extends Item {
 			File targetFile = new File(p.toString());
 			if (targetFile.exists()) {
 				HashSet<String> existingFileNames = new HashSet<String>();
-				for(File f : new File(folder).listFiles()) {
+				for (File f : new File(folder).listFiles()) {
 					existingFileNames.add(f.getName());
 				}
 				int version = 2;
-				while(existingFileNames.contains(this.getName() + "_V" + version + fileExtension)) {
+				while (existingFileNames.contains(this.getName() + "_V" + version + fileExtension)) {
 					version++;
 				}
 				p = Paths.get(folder, this.getName() + "_V" + version + fileExtension);
@@ -66,7 +66,7 @@ public class FileItem extends Item {
 			return null;
 		}
 	}
-	
+
 	public static void addRefID(File f, String id) {
 		try {
 			if (f.getPath().endsWith(".pdf")) {
@@ -93,7 +93,7 @@ public class FileItem extends Item {
 				PDDocument pd = PDDocument.load(f);
 				PDDocumentInformation info = pd.getDocumentInformation();
 				pd.close();
-				return(info.getCustomMetadataValue("refid"));
+				return (info.getCustomMetadataValue("refid"));
 			} else {
 				Path p = Paths.get(f.getAbsolutePath());
 				byte[] b = (byte[]) Files.getAttribute(p, "user:refid");

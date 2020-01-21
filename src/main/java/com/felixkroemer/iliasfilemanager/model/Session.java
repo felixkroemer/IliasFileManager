@@ -20,10 +20,12 @@ public class Session {
 	private String password;
 	private String phpsessid;
 	private Folder root;
+	private boolean initiated;
 
 	public Session() {
 		this.user = Settings.getConfig(Settings.Config.USERNAME);
 		this.password = Settings.getConfig(Settings.Config.PASSWORD);
+		this.initiated = false;
 		try {
 			this.initSessionId(user, password);
 			this.root = new Folder("Root", Constant.MAINPAGE, this.phpsessid);
@@ -56,7 +58,7 @@ public class Session {
 
 		if (!resp2.hasCookie("CASTGC")) {
 			logger.fatal("Wrong login credentials");
-			System.exit(0);
+			return;
 		}
 
 		ident = "ticket=";
@@ -67,6 +69,11 @@ public class Session {
 				.execute();
 
 		logger.info("Logged in succesfully");
+		this.initiated = true;
+	}
+
+	public boolean isInitiated() {
+		return this.initiated;
 	}
 
 	public Set<Folder> getCourses() {

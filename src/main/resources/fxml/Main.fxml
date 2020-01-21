@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.felixkroemer.iliasfilemanager.control.MainController">
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="Sync">
+          <items>
+            <MenuItem fx:id="syncAllButton" mnemonicParsing="false" onAction="#syncAll" text="Sync All" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+    <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+      <children>
+            <TreeTableView fx:id="subscriptionTTV" minHeight="0.0" minWidth="0.0" prefHeight="350.0" prefWidth="640.0" AnchorPane.bottomAnchor="24.666666666666686" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+              <columns>
+                <TreeTableColumn fx:id="nameColumn" prefWidth="300.0" resizable="false" text="Name" />
+                  <TreeTableColumn fx:id="statusColumn" prefWidth="100.0" resizable="false" text="Status" />
+                  <TreeTableColumn fx:id="syncedColumn" prefWidth="238.66665649414062" resizable="false" text="Synced" />
+              </columns>
+            </TreeTableView>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="25.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <children>
+                  <Pane layoutY="285.0" prefHeight="25.0" prefWidth="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="615.0">
+                     <children>
+                        <ProgressIndicator fx:id="progressIndicator" layoutX="2.0" layoutY="2.0" prefHeight="22.0" prefWidth="22.0" progress="0.0" />
+                     </children>
+                  </Pane>
+                  <Pane layoutY="260.0" prefHeight="25.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                     <children>
+                        <Text fx:id="statusText" layoutY="17.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="640.0" />
+                     </children></Pane>
+               </children>
+            </AnchorPane>
+      </children>
+    </AnchorPane>
+  </children>
+</VBox>
