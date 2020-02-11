@@ -1,29 +1,67 @@
 package com.felixkroemer.iliasfilemanager;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 
-public class Settings {
+import com.felixkroemer.iliasfilemanager.model.Subscription;
+
+public final class Settings {
 
 	private static final Logger logger = LogManager.getLogger(Settings.class);
 	private static String[] args;
 	private static final String userFlag = "-user";
 	private static final String configFileFlag = "-config";
 	private static Map<Config, String> configs;
-	public static enum Config {USERNAME, PASSWORD, CONFIG_FILE};
+
+	public static enum Config {
+		USERNAME, PASSWORD, CONFIG_FILE
+	};
 
 	public static void init(String[] arguments) {
 		args = arguments;
 		configs = new HashMap<Config, String>();
 		configs.put(Config.CONFIG_FILE, "config.xml");
-		parse();
+		parseArgs();
 	}
 
-	public static void parse() {
+	public static Set<Subscription> parseConfigFile() {
+		logger.info("parsing config file");
+		Document doc = null;
+		HashSet<Subscription> subs = new HashSet<Subscription>();
+		try {
+			String conf = Settings.getConfig(Settings.Config.CONFIG_FILE);
+			File f = new File(conf);
+			if (!f.exists() || !f.canRead()) {
+				return subs;
+			}
+			doc = new SAXBuilder().build(Settings.getConfig(Settings.Config.CONFIG_FILE));
+		} catch (JDOMException | IOException e) {
+			logger.fatal("Config could not be parsed");
+			logger.debug(e);
+			System.exit(0);
+		}
+		for (Element courseElement : doc.getRootElement().getChildren()) {
+			String title = courseElement.getChildText("title");
+			for (Element subfolderElement : courseElement.getChildren("subfolder")) {
+				subs.add(new Subscription(title, subfolderElement.getText(),
+						subfolderElement.getAttributeValue("path")));
+			}
+		}
+		return subs;
+	}
 
+	private static void parseArgs() {
 		for (int i = 0; i < args.length; i++) {
 
 			if (args[i] == null) {

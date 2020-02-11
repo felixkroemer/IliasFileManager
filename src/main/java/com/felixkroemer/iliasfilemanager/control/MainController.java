@@ -1,20 +1,29 @@
 package com.felixkroemer.iliasfilemanager.control;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.felixkroemer.iliasfilemanager.Constant;
+import com.felixkroemer.iliasfilemanager.LoginCredentialsDialog;
 import com.felixkroemer.iliasfilemanager.model.Displayable;
 import com.felixkroemer.iliasfilemanager.model.Model;
 import com.felixkroemer.iliasfilemanager.model.Subscription;
 import com.felixkroemer.iliasfilemanager.model.items.Folder;
 import com.felixkroemer.iliasfilemanager.model.items.Item;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
@@ -23,9 +32,13 @@ import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class MainController {
 	private Model model;
+	private static final Logger logger = LogManager.getLogger(MainController.class);
 	private Map<Displayable, TreeItem<Displayable>> subscriptionMap;
 
 	@FXML
@@ -47,7 +60,13 @@ public class MainController {
 	MenuItem syncAllButton;
 
 	@FXML
-	Text statusText;
+	TextFlow statusText;
+
+	@FXML
+	Hyperlink hyperlink;
+
+	@FXML
+	MenuItem addSubButton;
 
 	public void injectModel(Model m) {
 		this.model = m;
@@ -64,6 +83,9 @@ public class MainController {
 						TreeItem<Displayable> t = new TreeItem<Displayable>(s);
 						subscriptionTTV.getRoot().getChildren().add(t);
 						this.subscriptionMap.put(s, t);
+						if (s.getSubValid()) {
+							this.recursiveTTVInsert(t, s.getFolder().getChildren());
+						}
 					}
 				}
 			}
@@ -78,27 +100,48 @@ public class MainController {
 		});
 
 		model.getStatusMessageProperty().addListener((obs, oldValue, newValue) -> {
-			this.statusText.setText(newValue);
+			if (newValue.equals(Constant.WRONG_CREDS)) {
+				hyperlink = new Hyperlink(" (Log In)");
+				hyperlink.setOnAction(e -> {
+					new Thread(() -> {
+						LoginCredentialsDialog.requestCredentials();
+						this.initModel();
+					}).start();
+				});
+			} else {
+				hyperlink = null;
+			}
+			Platform.runLater(() -> {
+				this.statusText.getChildren().clear();
+				this.statusText.getChildren().add(new Text(newValue));
+				if (hyperlink != null) {
+					this.statusText.getChildren().add(hyperlink);
+				}
+			});
 		});
 
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				model.getLoadingProperty().set(true);
 				model.initSubscriptions();
-				if (model.initSession()) {
-					model.findSubscriptionFolders();
-					model.detectAllSycedFiles();
-					for (Subscription s : model.getValidSubscriptions()) {
-						recursiveTTVInsert(subscriptionMap.get(s), s.getFolder().getChildren());
-					}
-				}
-				model.getLoadingProperty().set(false);
+				initModel();
 			}
 		}).start();
 	}
 
-	public void recursiveTTVInsert(TreeItem<Displayable> parent, Set<Item> children) {
+	private void initModel() {
+		model.getLoadingProperty().set(true);
+		if (this.model.initSession() && !this.model.getReadyToSyncProperty().get()) {
+			this.model.findSubscriptionFolders();
+			this.model.detectAllSyncedFiles();
+			for (Subscription s : this.model.getValidSubscriptions()) {
+				recursiveTTVInsert(subscriptionMap.get(s), s.getFolder().getChildren());
+			}
+		}
+		model.getLoadingProperty().set(false);
+	}
+
+	private void recursiveTTVInsert(TreeItem<Displayable> parent, Set<Item> children) {
 		for (Item child : children) {
 			TreeItem<Displayable> treeItem = new TreeItem<Displayable>(child);
 			parent.getChildren().add(treeItem);
@@ -108,7 +151,8 @@ public class MainController {
 		}
 	}
 
-	public void initialize() {
+	@FXML
+	private void initialize() {
 		TreeItem<Displayable> root = new TreeItem<Displayable>();
 		subscriptionTTV.setRoot(root);
 		subscriptionTTV.setShowRoot(false);
@@ -147,11 +191,26 @@ public class MainController {
 
 		this.syncAllButton.setDisable(true);
 
-		this.statusText.wrappingWidthProperty().bind(subscriptionTTV.widthProperty());
+		this.statusText.prefWidthProperty().bind(subscriptionTTV.widthProperty());
 	}
 
 	@FXML
 	private void syncAll(ActionEvent e) {
 		this.model.syncAll();
+	}
+
+	@FXML
+	private void addSubscription(ActionEvent e) {
+		try {
+			Stage stage = new Stage();
+			stage.initModality(Modality.WINDOW_MODAL);
+			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/AddSub.fxml"));
+			stage.setScene(new Scene(fxmlLoader.load()));
+			stage.initOwner(subscriptionTTV.getScene().getWindow());
+			stage.show();
+			((AddSubController) fxmlLoader.getController()).injectModel(this.model);
+		} catch (IOException exception) {
+			logger.debug(exception);
+		}
 	}
 }

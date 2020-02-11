@@ -32,7 +32,6 @@ public class Session {
 		} catch (IOException e) {
 			logger.fatal("Session could not be created: " + e.getMessage());
 			logger.debug(e);
-			System.exit(0);
 		}
 	}
 

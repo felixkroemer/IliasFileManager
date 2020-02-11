@@ -9,42 +9,144 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
 
-<VBox prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.felixkroemer.iliasfilemanager.control.MainController">
-  <children>
-    <MenuBar VBox.vgrow="NEVER">
-      <menus>
-        <Menu mnemonicParsing="false" text="Sync">
-          <items>
-            <MenuItem fx:id="syncAllButton" mnemonicParsing="false" onAction="#syncAll" text="Sync All" />
-          </items>
-        </Menu>
-      </menus>
-    </MenuBar>
-    <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
-      <children>
-            <TreeTableView fx:id="subscriptionTTV" minHeight="0.0" minWidth="0.0" prefHeight="350.0" prefWidth="640.0" AnchorPane.bottomAnchor="24.666666666666686" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <columns>
-                <TreeTableColumn fx:id="nameColumn" prefWidth="300.0" resizable="false" text="Name" />
-                  <TreeTableColumn fx:id="statusColumn" prefWidth="100.0" resizable="false" text="Status" />
-                  <TreeTableColumn fx:id="syncedColumn" prefWidth="238.66665649414062" resizable="false" text="Synced" />
-              </columns>
-            </TreeTableView>
-            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="25.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-               <children>
-                  <Pane layoutY="285.0" prefHeight="25.0" prefWidth="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="615.0">
-                     <children>
-                        <ProgressIndicator fx:id="progressIndicator" layoutX="2.0" layoutY="2.0" prefHeight="22.0" prefWidth="22.0" progress="0.0" />
-                     </children>
-                  </Pane>
-                  <Pane layoutY="260.0" prefHeight="25.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
-                     <children>
-                        <Text fx:id="statusText" layoutY="17.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="640.0" />
-                     </children></Pane>
-               </children>
-            </AnchorPane>
-      </children>
-    </AnchorPane>
-  </children>
+<VBox prefHeight="400.0" prefWidth="640.0"
+	xmlns="http://javafx.com/javafx/11.0.1"
+	xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="com.felixkroemer.iliasfilemanager.control.MainController">
+	<style>
+		.root {
+		-fx-accent: #1e74c6;
+		-fx-focus-color: -fx-accent;
+		-fx-base: #373e43;
+		-fx-control-inner-background: derive(-fx-base, 35%);
+		-fx-control-inner-background-alt: -fx-control-inner-background;
+		-fx-focus-color: transparent;
+		-fx-faint-focus-color: transparent;
+		}
+
+		.label {
+		-fx-text-fill: lightgray;
+		}
+
+		.text-field {
+		-fx-prompt-text-fill: gray;
+		}
+
+		.titulo {
+		-fx-font-weight: bold;
+		-fx-font-size: 18px;
+		}
+
+		.button {
+		-fx-focus-traversable: false;
+		}
+
+		.button:hover {
+		-fx-text-fill: white;
+		}
+
+		.separator *.line {
+		-fx-background-color: #3C3C3C;
+		-fx-border-style: solid;
+		-fx-border-width: 1px;
+		}
+
+		.scroll-bar {
+		-fx-background-color: derive(-fx-base, 45%)
+		}
+
+		.button:default {
+		-fx-base: -fx-accent;
+		}
+
+		.table-view {
+		/*-fx-background-color: derive(-fx-base, 10%);*/
+		-fx-selection-bar-non-focused: derive(-fx-base, 50%);
+		}
+
+		.table-view .column-header .label {
+		-fx-alignment: CENTER_LEFT;
+		-fx-font-weight: none;
+		}
+
+		.list-cell:even,
+		.list-cell:odd,
+		.table-row-cell:even,
+		.table-row-cell:odd {
+		-fx-control-inner-background: derive(-fx-base, 15%);
+		}
+
+		.list-cell:empty,
+		.table-row-cell:empty {
+		-fx-background-color: transparent;
+		}
+
+		.list-cell,
+		.table-row-cell {
+		-fx-border-color: transparent;
+		-fx-table-cell-border-color: transparent;
+		}
+	</style>
+	<children>
+		<MenuBar VBox.vgrow="NEVER">
+			<menus>
+				<Menu mnemonicParsing="false" text="Sync">
+					<items>
+						<MenuItem fx:id="syncAllButton" mnemonicParsing="false"
+							onAction="#syncAll" text="Sync All" />
+					</items>
+				</Menu>
+				<Menu mnemonicParsing="false" text="Subscriptions">
+					<items>
+						<MenuItem fx:id="addSubButton" mnemonicParsing="false"
+							onAction="#addSubscription" text="Add New Subscription" />
+					</items>
+				</Menu>
+			</menus>
+		</MenuBar>
+		<AnchorPane fx:id="anchor" maxHeight="-1.0" maxWidth="-1.0"
+			prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+			<children>
+				<TreeTableView fx:id="subscriptionTTV" minHeight="0.0"
+					minWidth="0.0" prefHeight="350.0" prefWidth="640.0"
+					AnchorPane.bottomAnchor="24.666666666666686"
+					AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+					AnchorPane.topAnchor="0.0">
+					<columns>
+						<TreeTableColumn fx:id="nameColumn"
+							prefWidth="300.0" resizable="false" text="Name" />
+						<TreeTableColumn fx:id="statusColumn"
+							prefWidth="100.0" resizable="false" text="Status" />
+						<TreeTableColumn fx:id="syncedColumn"
+							prefWidth="238.66665649414062" resizable="false" text="Synced" />
+					</columns>
+				</TreeTableView>
+				<AnchorPane minHeight="0.0" minWidth="0.0"
+					prefHeight="25.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+					<children>
+						<Pane layoutY="285.0" prefHeight="25.0" prefWidth="25.0"
+							AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+							AnchorPane.rightAnchor="615.0">
+							<children>
+								<ProgressIndicator fx:id="progressIndicator"
+									layoutX="2.0" layoutY="2.0" prefHeight="22.0" prefWidth="22.0"
+									progress="0.0" />
+							</children>
+						</Pane>
+						<Pane layoutY="260.0" prefHeight="25.0" prefWidth="640.0"
+							AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+							AnchorPane.rightAnchor="0.0">
+							<children>
+								<TextFlow fx:id="statusText" layoutY="4.0"
+									prefHeight="17.0" prefWidth="640.0" textAlignment="CENTER" />
+							</children>
+						</Pane>
+					</children>
+				</AnchorPane>
+			</children>
+		</AnchorPane>
+	</children>
 </VBox>

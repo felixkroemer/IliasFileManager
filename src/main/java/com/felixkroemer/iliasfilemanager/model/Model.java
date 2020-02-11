@@ -9,14 +9,12 @@ import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jdom2.Document;
-import org.jdom2.Element;
-import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
 
+import com.felixkroemer.iliasfilemanager.Constant;
 import com.felixkroemer.iliasfilemanager.Settings;
 import com.felixkroemer.iliasfilemanager.model.items.FileItem;
 import com.felixkroemer.iliasfilemanager.model.items.Folder;
+import com.felixkroemer.iliasfilemanager.model.items.Item;
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,45 +37,37 @@ public class Model {
 		this.statusMessage = new SimpleStringProperty();
 	}
 
-	private Document parseConfig() {
-		logger.info("parsing config file");
-		File f = new File(Settings.getConfig(Settings.Config.CONFIG_FILE));
-		if (!f.exists()) {
-			logger.fatal("Config file " + f.getAbsolutePath() + " does not exist");
-			System.exit(0);
-		}
-		Document doc = null;
-		try {
-			doc = new SAXBuilder().build(Settings.getConfig(Settings.Config.CONFIG_FILE));
-		} catch (JDOMException | IOException e) {
-			logger.fatal("Config could not be parsed");
-			logger.debug(e);
-			System.exit(0);
-		}
-		return doc;
-	}
-
 	public void initSubscriptions() {
-		Document config = this.parseConfig();
-		for (Element courseElement : config.getRootElement().getChildren()) {
-			String title = courseElement.getChildText("title");
-			for (Element subfolderElement : courseElement.getChildren("subfolder")) {
-				this.subscriptions.add(new Subscription(title, subfolderElement.getText(),
-						subfolderElement.getAttributeValue("path")));
-			}
+		Set<Subscription> subs = Settings.parseConfigFile();
+		for (Subscription sub : subs) {
+			this.subscriptions.add(sub);
 		}
 	}
 
 	public boolean initSession() {
+		if (this.session != null && this.session.isInitiated()) {
+			return true;
+		}
 		this.session = new Session();
 		if (!this.session.isInitiated()) {
-			this.statusMessage.set("Wrong login credentials");
+			this.statusMessage.set(Constant.WRONG_CREDS);
+		} else {
+			this.statusMessage.set("Logged in successfully");
 		}
 		return this.session.isInitiated();
 	}
 
+	public boolean getSessionInitiated() {
+		if (this.session != null) {
+			return this.session.isInitiated();
+		} else {
+			return false;
+		}
+	}
+
 	public void findSubscriptionFolders() {
 		for (Subscription sub : this.subscriptions) {
+			sub.setStatus("Initializing");
 			boolean found = false;
 			for (Folder course : this.session.getCourses()) {
 				if (course.getName().equalsIgnoreCase(sub.getTitle())) {
@@ -87,6 +77,7 @@ public class Model {
 					if (folder != null) {
 						sub.setFolder(folder);
 						sub.validateSub();
+						sub.setStatus("Folder found");
 						logger.info(
 								"Found match for subfolder " + sub.getSubfolder() + " --> \"" + sub.getPath() + "\"");
 					} else {
@@ -101,9 +92,16 @@ public class Model {
 		}
 	}
 
-	public void detectAllSycedFiles() {
+	public void detectAllSyncedFiles() {
 		for (Subscription s : this.getValidSubscriptions()) {
+			s.setStatus("Discovering Files");
 			this.detectSyncedFiles(s.getFolder(), s.getPath());
+			if (testAllSynced(s.getFolder())) {
+				s.setSynced(true);
+				s.setStatus("Synced");
+			} else {
+				s.setStatus("Not Synced");
+			}
 		}
 		this.readyToSync.set(true);
 	}
@@ -163,8 +161,33 @@ public class Model {
 		}
 		for (Subscription s : this.getValidSubscriptions()) {
 			logger.info("Handling subscription: " + s.getFolder().getName() + " (" + s.getPath() + ")");
+			s.setStatus("Syncing");
 			this.downloadMissingFiles(s.getFolder(), s.getPath());
+			if (testAllSynced(s.getFolder())) {
+				s.setSynced(true);
+				s.setStatus("Synced");
+			}
 		}
+	}
+
+	public boolean testAllSynced(Folder f) {
+		for (Item i : f.getChildren()) {
+			switch (i.getType()) {
+			case FILE:
+				if (!i.getSynced().get()) {
+					return false;
+				}
+				break;
+			case FOLDER:
+				if (testAllSynced((Folder) i)) {
+					((Folder) i).setSynced(true);
+				} else {
+					return false;
+				}
+				break;
+			}
+		}
+		return true;
 	}
 
 	public void downloadMissingFiles(Folder folder, String path) {
@@ -202,5 +225,13 @@ public class Model {
 			}
 		}
 		return set;
+	}
+
+	public Set<Folder> getCourses() {
+		if (this.session.isInitiated()) {
+			return this.session.getCourses();
+		} else {
+			return new HashSet<Folder>();
+		}
 	}
 }

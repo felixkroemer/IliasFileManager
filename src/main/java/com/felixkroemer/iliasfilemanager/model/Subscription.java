@@ -19,7 +19,7 @@ public class Subscription implements Displayable {
 		this.subfolder = subfolder;
 		this.path = path;
 		this.status = new SimpleStringProperty();
-		this.status.set("");
+		this.status.set("Not initialized");
 		this.synced = new SimpleBooleanProperty();
 		this.isValid = false;
 	}
@@ -58,6 +58,10 @@ public class Subscription implements Displayable {
 
 	public SimpleBooleanProperty getSynced() {
 		return this.synced;
+	}
+
+	public void setSynced(boolean b) {
+		this.synced.set(b);
 	}
 
 	public void validateSub() {
