@@ -1,6 +1,7 @@
 package com.felixkroemer.iliasfilemanager;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,8 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 
 import com.felixkroemer.iliasfilemanager.model.Subscription;
 
@@ -23,6 +26,7 @@ public final class Settings {
 	private static final String userFlag = "-user";
 	private static final String configFileFlag = "-config";
 	private static Map<Config, String> configs;
+	private static Document document;
 
 	public static enum Config {
 		USERNAME, PASSWORD, CONFIG_FILE
@@ -35,9 +39,68 @@ public final class Settings {
 		parseArgs();
 	}
 
+	public static void addSubscription(String title, String path, String folder) {
+		Element courseElement = null;
+		boolean courseExists = false;
+		for (Element child : document.getRootElement().getChildren()) {
+			if (child.getChildText("title").equals(title)) {
+				courseElement = child;
+				courseExists = true;
+				break;
+			}
+		}
+		if (courseElement == null) {
+			courseElement = new Element("course");
+			Element titleElement = new Element("title");
+			titleElement.setText(title);
+			courseElement.addContent(titleElement);
+		} else {
+			for (Element subfolderElement : courseElement.getChildren("subfolder")) {
+				if (subfolderElement.getText().equals(folder)) {
+					logger.error("Subscription already exists");
+					return;
+				}
+			}
+		}
+		Element subfolder = new Element("subfolder");
+		subfolder.setText(folder);
+		subfolder.setAttribute("path", path);
+		courseElement.addContent(subfolder);
+		if (!courseExists) {
+			document.getRootElement().addContent(courseElement);
+		}
+		updateConfigFile();
+	}
+
+	public static void removeSubscription(String title, String subfolder) {
+		for (Element course : document.getRootElement().getChildren()) {
+			if (course.getChildText("title").equals(title)) {
+				for (Element sub : course.getChildren("subfolder")) {
+					if (sub.getText().equals(subfolder)) {
+						course.removeContent(sub);
+						break;
+					}
+				}
+				if (course.getChildren("subfolder").isEmpty()) {
+					document.getRootElement().removeContent(course);
+				}
+				break;
+			}
+		}
+		updateConfigFile();
+	}
+
+	private static void updateConfigFile() {
+		try {
+			XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
+			xmlOutputter.output(document, new FileOutputStream(Settings.getConfig(Settings.Config.CONFIG_FILE)));
+		} catch (IOException e) {
+			logger.debug(e);
+		}
+	}
+
 	public static Set<Subscription> parseConfigFile() {
 		logger.info("parsing config file");
-		Document doc = null;
 		HashSet<Subscription> subs = new HashSet<Subscription>();
 		try {
 			String conf = Settings.getConfig(Settings.Config.CONFIG_FILE);
@@ -45,13 +108,13 @@ public final class Settings {
 			if (!f.exists() || !f.canRead()) {
 				return subs;
 			}
-			doc = new SAXBuilder().build(Settings.getConfig(Settings.Config.CONFIG_FILE));
+			document = new SAXBuilder().build(Settings.getConfig(Settings.Config.CONFIG_FILE));
 		} catch (JDOMException | IOException e) {
 			logger.fatal("Config could not be parsed");
 			logger.debug(e);
 			System.exit(0);
 		}
-		for (Element courseElement : doc.getRootElement().getChildren()) {
+		for (Element courseElement : document.getRootElement().getChildren()) {
 			String title = courseElement.getChildText("title");
 			for (Element subfolderElement : courseElement.getChildren("subfolder")) {
 				subs.add(new Subscription(title, subfolderElement.getText(),

@@ -44,6 +44,10 @@ public class Model {
 		}
 	}
 
+	public void addSubscription(Subscription sub) {
+		// TODO
+	}
+
 	public boolean initSession() {
 		if (this.session != null && this.session.isInitiated()) {
 			return true;

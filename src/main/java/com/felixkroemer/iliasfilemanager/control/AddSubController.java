@@ -1,6 +1,10 @@
 package com.felixkroemer.iliasfilemanager.control;
 
+import java.io.File;
+
+import com.felixkroemer.iliasfilemanager.Settings;
 import com.felixkroemer.iliasfilemanager.model.Model;
+import com.felixkroemer.iliasfilemanager.model.Subscription;
 import com.felixkroemer.iliasfilemanager.model.items.Folder;
 
 import javafx.collections.ObservableList;
@@ -11,10 +15,12 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 public class AddSubController {
 	private Model model;
-	private Folder selectedFolder;
+	private TreeItem<Folder> selectedFolder;
 
 	@FXML
 	TreeView<Folder> treeView;
@@ -59,14 +65,25 @@ public class AddSubController {
 			if (this.addButton.isDisable()) {
 				this.addButton.setDisable(false);
 			}
-			this.selectedFolder = newValue.getValue();
+			this.selectedFolder = newValue;
 		});
 	}
 
 	@FXML
 	private void addSubscription(ActionEvent e) {
-		// TODO
-		System.out.println(this.selectedFolder.getName());
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		Stage stage = (Stage) this.addButton.getScene().getWindow();
+		File dir = directoryChooser.showDialog(stage);
+		TreeItem<Folder> course = this.selectedFolder;
+		while (course.getParent() != this.treeView.getRoot()) {
+			course = course.getParent();
+		}
+		Subscription sub = new Subscription(course.getValue().getName(), this.selectedFolder.getValue().getName(),
+				dir.getAbsolutePath());
+		sub.validateSub();
+		Settings.addSubscription(sub.getName(), sub.getPath(), sub.getSubfolder());
+		this.model.addSubscription(sub);
+		stage.close();
 	}
 
 	class LazyLoadingTreeItem extends TreeItem<Folder> {
