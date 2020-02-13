@@ -20,7 +20,7 @@ import javafx.stage.Stage;
 
 public class AddSubController {
 	private Model model;
-	private TreeItem<Folder> selectedFolder;
+	private TreeItem<Folder> selectedTreeItem;
 
 	@FXML
 	TreeView<Folder> treeView;
@@ -33,7 +33,7 @@ public class AddSubController {
 
 	public void injectModel(Model m) {
 		this.model = m;
-		this.selectedFolder = null;
+		this.selectedTreeItem = null;
 		for (Folder f : this.model.getCourses()) {
 			this.treeView.getRoot().getChildren().add(new LazyLoadingTreeItem(f));
 		}
@@ -65,7 +65,7 @@ public class AddSubController {
 			if (this.addButton.isDisable()) {
 				this.addButton.setDisable(false);
 			}
-			this.selectedFolder = newValue;
+			this.selectedTreeItem = newValue;
 		});
 	}
 
@@ -74,16 +74,19 @@ public class AddSubController {
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		Stage stage = (Stage) this.addButton.getScene().getWindow();
 		File dir = directoryChooser.showDialog(stage);
-		TreeItem<Folder> course = this.selectedFolder;
+		TreeItem<Folder> course = this.selectedTreeItem;
 		while (course.getParent() != this.treeView.getRoot()) {
 			course = course.getParent();
 		}
-		Subscription sub = new Subscription(course.getValue().getName(), this.selectedFolder.getValue().getName(),
+		Subscription sub = new Subscription(course.getValue().getName(), this.selectedTreeItem.getValue().getName(),
 				dir.getAbsolutePath());
+		sub.setFolder(this.selectedTreeItem.getValue());
 		sub.validateSub();
-		Settings.addSubscription(sub.getName(), sub.getPath(), sub.getSubfolder());
-		this.model.addSubscription(sub);
 		stage.close();
+		new Thread(() -> {
+			Settings.addSubscription(sub.getTitle(), sub.getPath(), sub.getSubfolder());
+			this.model.addSubscription(sub);
+		}).start();
 	}
 
 	class LazyLoadingTreeItem extends TreeItem<Folder> {

@@ -45,7 +45,11 @@ public class Model {
 	}
 
 	public void addSubscription(Subscription sub) {
-		// TODO
+		this.loading.set(true);
+		sub.setStatus("Initializing");
+		this.subscriptions.add(sub);
+		this.detectSyncedFiles(sub);
+		this.loading.set(false);
 	}
 
 	public boolean initSession() {
@@ -98,16 +102,20 @@ public class Model {
 
 	public void detectAllSyncedFiles() {
 		for (Subscription s : this.getValidSubscriptions()) {
-			s.setStatus("Discovering Files");
-			this.detectSyncedFiles(s.getFolder(), s.getPath());
-			if (testAllSynced(s.getFolder())) {
-				s.setSynced(true);
-				s.setStatus("Synced");
-			} else {
-				s.setStatus("Not Synced");
-			}
+			this.detectSyncedFiles(s);
 		}
 		this.readyToSync.set(true);
+	}
+
+	public void detectSyncedFiles(Subscription s) {
+		s.setStatus("Discovering Files");
+		this.detectSyncedFiles(s.getFolder(), s.getPath());
+		if (testAllSynced(s.getFolder())) {
+			s.setSynced(true);
+			s.setStatus("Synced");
+		} else {
+			s.setStatus("Not Synced");
+		}
 	}
 
 	public void detectSyncedFiles(Folder folder, String path) {
@@ -152,7 +160,6 @@ public class Model {
 		} catch (IOException e) {
 			logger.error("Could not check existing files in directory " + path + "\n" + e.getMessage());
 			logger.debug(e);
-			e.printStackTrace();
 		}
 		for (Folder f : folder.getSubfolders()) {
 			this.detectSyncedFiles(f, path + Settings.getSeparator() + f.getName());
@@ -164,6 +171,9 @@ public class Model {
 			return;
 		}
 		for (Subscription s : this.getValidSubscriptions()) {
+			if (s.getSynced().get()) {
+				continue;
+			}
 			logger.info("Handling subscription: " + s.getFolder().getName() + " (" + s.getPath() + ")");
 			s.setStatus("Syncing");
 			this.downloadMissingFiles(s.getFolder(), s.getPath());
