@@ -185,23 +185,24 @@ public class Model {
 	}
 
 	public boolean testAllSynced(Folder f) {
+		boolean synced = true;
 		for (Item i : f.getChildren()) {
 			switch (i.getType()) {
 			case FILE:
 				if (!i.getSynced().get()) {
-					return false;
+					synced = false;
 				}
 				break;
 			case FOLDER:
 				if (testAllSynced((Folder) i)) {
 					((Folder) i).setSynced(true);
 				} else {
-					return false;
+					synced = false;
 				}
 				break;
 			}
 		}
-		return true;
+		return synced;
 	}
 
 	public void downloadMissingFiles(Folder folder, String path) {
