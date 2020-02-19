@@ -18,7 +18,9 @@ public class IFM extends Application {
 		Settings.init(getParameters().getRaw().toArray(new String[0]));
 		LoginCredentialsDialog.requestCredentials();
 		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/Main.fxml"));
-		stage.setScene(new Scene(fxmlLoader.load()));
+		Scene scene = new Scene(fxmlLoader.load());
+		scene.getStylesheets().add(getClass().getResource("/fxml/Main.css").toExternalForm());
+		stage.setScene(scene);
 		stage.show();
 		((MainController) fxmlLoader.getController()).injectModel(new Model());
 	}

@@ -31,6 +31,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
@@ -113,7 +114,9 @@ public class MainController {
 			}
 			Platform.runLater(() -> {
 				this.statusText.getChildren().clear();
-				this.statusText.getChildren().add(new Text(newValue));
+				Text text = new Text(newValue);
+				text.setFill(Color.WHITE);
+				this.statusText.getChildren().add(text);
 				if (hyperlink != null) {
 					this.statusText.getChildren().add(hyperlink);
 				}
@@ -205,7 +208,9 @@ public class MainController {
 			Stage stage = new Stage();
 			stage.initModality(Modality.WINDOW_MODAL);
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/AddSub.fxml"));
-			stage.setScene(new Scene(fxmlLoader.load()));
+			Scene scene = new Scene(fxmlLoader.load());
+			scene.getStylesheets().add(getClass().getResource("/fxml/Main.css").toExternalForm());
+			stage.setScene(scene);
 			stage.initOwner(subscriptionTTV.getScene().getWindow());
 			stage.show();
 			((AddSubController) fxmlLoader.getController()).injectModel(this.model);

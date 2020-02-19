@@ -1,0 +1,31 @@
+.root {
+	-fx-base: #373e43;
+	-fx-control-inner-background: -fx-base;
+	-fx-control-inner-background-alt: green;
+	-fx-focus-color: transparent;
+	-fx-faint-focus-color: transparent;
+	-fx-accent: derive(-fx-base, 10%);
+	-fx-background-color: -fx-base;
+}
+
+.tree-table-view, .tree-view {
+	-fx-background-color: -fx-base;
+}
+
+.menu-bar {
+	-fx-background-color: -fx-base;
+}
+
+.column-header {
+	-fx-background-color: -fx-base;
+	-fx-border-color: -fx-accent;
+	-fx-border-width: 0.5 0.25 0.5 0.25;
+}
+
+.progress-indicator {
+	-fx-progress-color: white;
+}
+
+.hyperlink {
+	-fx-text-fill: white;
+}
